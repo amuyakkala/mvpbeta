@@ -1,0 +1,103 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Table styles */
+.MuiTable-root {
+  min-width: 650px;
+}
+
+.MuiTableCell-root {
+  padding: 16px;
+}
+
+/* Form styles */
+.MuiTextField-root {
+  margin-bottom: 16px;
+}
+
+/* Button styles */
+.MuiButton-root {
+  text-transform: none;
+}
+
+/* Card styles */
+.MuiPaper-root {
+  border-radius: 8px;
+}
+
+/* Avatar styles */
+.MuiAvatar-root {
+  background-color: #1976d2;
+}
+
+/* Chip styles */
+.MuiChip-root {
+  margin: 4px;
+}
+
+/* List styles */
+.MuiList-root {
+  padding: 0;
+}
+
+.MuiListItem-root {
+  padding: 16px;
+}
+
+/* Icon styles */
+.MuiSvgIcon-root {
+  font-size: 1.5rem;
+}
+
+/* Typography styles */
+.MuiTypography-h4 {
+  font-weight: 600;
+}
+
+.MuiTypography-h6 {
+  font-weight: 500;
+}
+
+/* Container styles */
+.MuiContainer-root {
+  padding: 24px;
+}
+
+/* Grid styles */
+.MuiGrid-container {
+  margin: 0;
+}
+
+.MuiGrid-item {
+  padding: 16px;
+} 
