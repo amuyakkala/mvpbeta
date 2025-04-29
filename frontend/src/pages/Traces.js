@@ -26,16 +26,19 @@ export default function Traces() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchTraces();
-  }, []);
+    if (user) {
+      fetchTraces();
+    }
+  }, [user]);
 
   const fetchTraces = async () => {
     try {
       setLoading(true);
       const { data } = await api.get('/logs/traces');
-      setTraces(data.items);
+      setTraces(data);
     } catch (err) {
       console.error('Error fetching traces:', err);
       setError('Failed to fetch traces');
@@ -60,7 +63,7 @@ export default function Traces() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await api.post('/logs/upload', formData, {
+      await api.post('/logs/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

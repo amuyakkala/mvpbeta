@@ -123,10 +123,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     except JWTError:
         raise credentials_exception
     
-    user = db.query(User).filter(User.email == token_data.email).first()
-    if user is None:
+    try:
+        user = db.query(User).filter(User.email == token_data.email).first()
+        if user is None:
+            raise credentials_exception
+        return user
+    except Exception as e:
+        logger.error(f"Error getting current user: {str(e)}")
         raise credentials_exception
-    return user
 
 @router.post("/register", response_model=TokenResponse)
 @limiter.limit("5/minute")
@@ -183,7 +187,23 @@ async def register(
         )
         
         db.add(db_user)
-        db.commit()  # Commit immediately
+        db.flush()  # Flush to get the user ID
+        
+        # Create single audit log
+        audit_log = AuditLog(
+            user_id=db_user.id,
+            action_type="register",
+            resource_type="user",
+            resource_id=db_user.id,
+            meta_data={
+                "ip_address": request.client.host if request.client else None,
+                "details": f"User registered: {db_user.email}"
+            }
+        )
+        db.add(audit_log)
+        
+        # Commit both user and audit log in a single transaction
+        db.commit()
         logger.info(f"User created successfully: {db_user.id}")
         
         # Create access token
@@ -232,28 +252,24 @@ async def login(
             data={"sub": user.email}, expires_delta=access_token_expires
         )
         
-        # Log the login action
-        db_audit = AuditLog(
+        # Create single audit log
+        audit_log = AuditLog(
             user_id=user.id,
             action_type="login",
             resource_type="user",
             resource_id=user.id,
-            meta_data={"ip_address": request.client.host}
+            meta_data={
+                "ip_address": request.client.host if request.client else None,
+                "details": f"User logged in: {user.email}"
+            }
         )
-        db.add(db_audit)
+        db.add(audit_log)
         db.commit()
         
         return TokenResponse(
-            user=UserResponse(
-                id=user.id,
-                email=user.email,
-                is_active=user.is_active,
-                full_name=user.full_name,
-                created_at=user.created_at
-            ),
+            user=UserResponse.from_orm(user),
             token=access_token,
-            token_type="bearer",
-            expires_in=int(access_token_expires.total_seconds())
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
         )
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
@@ -273,15 +289,18 @@ async def logout(
     Logout the current user.
     """
     try:
-        # Log the logout action
-        db_audit = AuditLog(
+        # Create single audit log
+        audit_log = AuditLog(
             user_id=current_user.id,
             action_type="logout",
             resource_type="user",
             resource_id=current_user.id,
-            meta_data={"ip_address": request.client.host}
+            meta_data={
+                "ip_address": request.client.host if request.client else None,
+                "details": f"User logged out: {current_user.email}"
+            }
         )
-        db.add(db_audit)
+        db.add(audit_log)
         db.commit()
         
         return {"message": "Successfully logged out"}

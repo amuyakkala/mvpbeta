@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get the API URL from environment variable or use default
-export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -16,8 +16,8 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Don't set Content-Type for FormData, let the browser set it automatically
-    if (!(config.data instanceof FormData)) {
+    // Only set Content-Type if it's not already set and not FormData
+    if (!config.headers['Content-Type'] && !(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
     

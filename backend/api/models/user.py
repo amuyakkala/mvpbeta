@@ -22,6 +22,16 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
+class User(UserBase):
+    id: int
+    is_active: bool
+    full_name: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class Token(BaseModel):
     access_token: str
     token_type: str

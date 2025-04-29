@@ -10,6 +10,7 @@ import MainLayout from './layouts/MainLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Home from './pages/Home';
 import Traces from './pages/Traces';
 import Issues from './pages/Issues';
 import Audit from './pages/Audit';
@@ -40,18 +41,18 @@ function App() {
       <CssBaseline />
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
-            path="/"
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <MainLayout />
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            <Route index element={<Dashboard />} />
             <Route path="traces" element={<Traces />} />
             <Route path="issues" element={<Issues />} />
             <Route path="audit" element={<Audit />} />

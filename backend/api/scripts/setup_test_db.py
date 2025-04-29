@@ -6,7 +6,7 @@ import json
 
 def setup_test_database(db_path: str) -> bool:
     """
-    Setup test database with sample data.
+    Setup test database with empty tables.
     
     Args:
         db_path: Path to database file
@@ -70,76 +70,14 @@ def setup_test_database(db_path: str) -> bool:
             )
         """)
         
-        # Insert test user
-        cursor.execute("""
-            INSERT INTO users (email, password_hash, role, created_at)
-            VALUES (?, ?, ?, ?)
-        """, (
-            "admin@test.com",
-            "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # password123
-            "admin",
-            datetime.now().isoformat()
-        ))
-        
-        # Insert test trace
-        test_trace = {
-            "timestamp": datetime.now().isoformat(),
-            "level": "INFO",
-            "message": "Test trace message",
-            "metadata": {
-                "service": "test-service",
-                "version": "1.0.0"
-            }
-        }
-        
-        cursor.execute("""
-            INSERT INTO traces (user_id, trace_data, created_at)
-            VALUES (?, ?, ?)
-        """, (
-            1,
-            json.dumps(test_trace),
-            datetime.now().isoformat()
-        ))
-        
-        # Insert test issue
-        cursor.execute("""
-            INSERT INTO issues (
-                trace_id, title, description, severity, status,
-                assigned_to_user_id, created_at, updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            1,
-            "Test Issue",
-            "This is a test issue",
-            "medium",
-            "open",
-            1,
-            datetime.now().isoformat(),
-            datetime.now().isoformat()
-        ))
-        
-        # Insert test audit log
-        cursor.execute("""
-            INSERT INTO audit_logs (user_id, action_type, metadata, created_at)
-            VALUES (?, ?, ?, ?)
-        """, (
-            1,
-            "test_action",
-            json.dumps({"test": "data"}),
-            datetime.now().isoformat()
-        ))
-        
         conn.commit()
-        conn.close()
         return True
         
-    except sqlite3.Error as e:
-        print(f"Database error: {e}")
-        return False
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(f"Error setting up database: {str(e)}")
         return False
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

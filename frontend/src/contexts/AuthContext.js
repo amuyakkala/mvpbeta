@@ -14,23 +14,20 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    console.log('AuthProvider mounted, token exists:', !!token);
     if (token) {
       fetchUser();
     } else {
+      setCurrentUser(null);
       setLoading(false);
     }
   }, []);
 
   const fetchUser = async () => {
     try {
-      console.log('Fetching user data...');
       const response = await api.get('/auth/me');
-      console.log('User data received:', response.data);
       setCurrentUser(response.data);
     } catch (err) {
       console.error('Error fetching user:', err);
-      console.error('Error response:', err.response?.data);
       localStorage.removeItem('token');
       setCurrentUser(null);
     } finally {
@@ -41,36 +38,27 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       setError('');
-      console.log('AuthContext login called with:', { email });
+      setLoading(true);
       
-      // Create FormData object for OAuth2 password flow
-      const formData = new FormData();
+      const formData = new URLSearchParams();
       formData.append('username', email);
       formData.append('password', password);
       
       const response = await api.post('/auth/login', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
       
-      console.log('Login API response:', response.data);
-      
       const { token, user } = response.data;
-      console.log('Setting token and user:', { token, user });
       localStorage.setItem('token', token);
       setCurrentUser(user);
       return true;
     } catch (err) {
-      console.error('AuthContext login error:', err);
-      console.error('Error response:', err.response?.data);
-      
-      // Handle Pydantic validation errors
+      console.error('Login error:', err);
       if (err.response?.data) {
         if (Array.isArray(err.response.data)) {
-          // Join all error messages with commas
-          const errorMessages = err.response.data.map(e => e.msg).join(', ');
-          setError(errorMessages);
+          setError(err.response.data.map(e => e.msg).join(', '));
         } else if (typeof err.response.data === 'object') {
           setError(err.response.data.detail || 'Failed to login');
         }
@@ -78,36 +66,38 @@ export function AuthProvider({ children }) {
         setError('Failed to login');
       }
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
   const register = async (userData) => {
-    console.log('Starting registration process...');
     try {
-      console.log('Making registration request to:', `${API_URL}/auth/register`);
-      console.log('Registration data:', userData);
+      setError('');
+      setLoading(true);
       const response = await api.post('/auth/register', userData);
-      console.log('Registration response:', response.data);
-      
       const { token, user } = response.data;
-      console.log('Registration successful, token received');
       localStorage.setItem('token', token);
       setCurrentUser(user);
       return true;
     } catch (err) {
-      console.error('Registration error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-        headers: err.response?.headers
-      });
-      setError(err.response?.data?.detail || 'Failed to register');
+      console.error('Registration error:', err);
+      if (err.response?.data) {
+        if (Array.isArray(err.response.data)) {
+          setError(err.response.data.map(e => e.msg).join(', '));
+        } else if (typeof err.response.data === 'object') {
+          setError(err.response.data.detail || 'Failed to register');
+        }
+      } else {
+        setError('Failed to register');
+      }
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = () => {
-    console.log('Logging out...');
     localStorage.removeItem('token');
     setCurrentUser(null);
   };
@@ -116,17 +106,10 @@ export function AuthProvider({ children }) {
     currentUser,
     loading,
     error,
-    isAuthenticated: !!currentUser,
     login,
     register,
     logout,
   };
 
-  console.log('AuthContext value:', { currentUser, loading, error, isAuthenticated: !!currentUser });
-
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 } 

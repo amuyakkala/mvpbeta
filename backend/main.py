@@ -5,50 +5,49 @@ from sqlalchemy.orm import Session
 from typing import List
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 
 from api.database.database import get_db, engine, SessionLocal
 from api.models.database import Base, User as UserModel
 from api.models.schemas import User
 from api.routes import api_router
-from api.auth.router import get_current_user, get_password_hash, create_access_token
+from api.auth.router import router as auth_router, get_current_user, get_password_hash, create_access_token
 from config.settings import settings
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+os.makedirs(log_dir, exist_ok=True)
+
+# Create a logger
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+# Create a file handler
+file_handler = RotatingFileHandler(
+    os.path.join(log_dir, 'app.log'),
+    maxBytes=1024*1024,  # 1MB
+    backupCount=5
+)
+file_handler.setLevel(logging.DEBUG)
+
+# Create a console handler
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+
+# Create a formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add the handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
 
 # Check if tables exist, create if they don't
 try:
     logger.info("Checking database tables...")
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables verified successfully")
-    
-    # Create a hardcoded test user if it doesn't exist
-    db = SessionLocal()
-    try:
-        test_user = db.query(UserModel).filter(UserModel.email == "amulya@example.com").first()
-        if not test_user:
-            test_user = UserModel(
-                email="amulya@example.com",
-                hashed_password="$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # password is "password"
-                full_name="Amulya Test",
-                is_active=True
-            )
-            db.add(test_user)
-            db.commit()
-            logger.info("Test user created successfully with email: amulya@example.com")
-        else:
-            logger.info("Test user already exists")
-        
-        # Generate and log the token
-        access_token = create_access_token(data={"sub": "amulya@example.com"})
-        logger.info(f"Generated access token: {access_token}")
-        
-    except Exception as e:
-        logger.error(f"Error creating test user: {str(e)}")
-        db.rollback()
-    finally:
-        db.close()
 except Exception as e:
     logger.error(f"Error initializing database: {str(e)}")
     raise
@@ -99,8 +98,11 @@ async def db_session_middleware(request: Request, call_next):
             db.close()
     return response
 
-# Include routers
-app.include_router(api_router, prefix="/api")
+# Include the auth router
+app.include_router(auth_router)
+
+# Include the main API router
+app.include_router(api_router)
 
 @app.get("/")
 async def root():
@@ -109,12 +111,6 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-
-@app.get("/me", response_model=User)
-async def read_users_me(
-    current_user: UserModel = Depends(get_current_user)
-):
-    return current_user
 
 if __name__ == "__main__":
     import uvicorn

@@ -32,11 +32,11 @@ function MainLayout() {
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Traces', icon: <UploadIcon />, path: '/traces' },
-    { text: 'Issues', icon: <IssuesIcon />, path: '/issues' },
-    { text: 'Audit', icon: <AuditIcon />, path: '/audit' },
-    { text: 'Notifications', icon: <NotificationsIcon />, path: '/notifications' },
-    { text: 'Profile', icon: <ProfileIcon />, path: '/profile' },
+    { text: 'Traces', icon: <UploadIcon />, path: '/dashboard/traces' },
+    { text: 'Issues', icon: <IssuesIcon />, path: '/dashboard/issues' },
+    { text: 'Audit', icon: <AuditIcon />, path: '/dashboard/audit' },
+    { text: 'Notifications', icon: <NotificationsIcon />, path: '/dashboard/notifications' },
+    { text: 'Profile', icon: <ProfileIcon />, path: '/dashboard/profile' },
   ];
 
   const drawer = (
@@ -125,9 +125,9 @@ function MainLayout() {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          mt: 8,
         }}
       >
-        <Toolbar />
         <Outlet />
       </Box>
     </Box>

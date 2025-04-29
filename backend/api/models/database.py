@@ -129,9 +129,13 @@ class Notification(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     title = Column(String)
     message = Column(String)
+    type = Column(String)  # alert, warning, info, error
+    status = Column(String)  # pending, sent, failed, read
+    recipient = Column(String)
     notification_metadata = Column(JSON)
     is_read = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
     user = relationship("User", back_populates="notifications")

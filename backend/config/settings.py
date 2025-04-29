@@ -8,7 +8,7 @@ load_dotenv()
 
 class Settings(BaseSettings):
     # Database settings
-    DATABASE_URL: str = "sqlite:///./app.db"  # Changed from in-memory to persistent file
+    DATABASE_URL: str = f"sqlite:///{os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'echosys.db')}"  # Use absolute path
     
     # JWT settings
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")  # Change this in production
@@ -71,7 +71,14 @@ class Settings(BaseSettings):
     # Notification Settings
     ENABLE_EMAIL_NOTIFICATIONS: bool = bool(os.getenv("ENABLE_EMAIL_NOTIFICATIONS", "False"))
     ENABLE_SLACK_NOTIFICATIONS: bool = bool(os.getenv("ENABLE_SLACK_NOTIFICATIONS", "False"))
-    SLACK_WEBHOOK_URL: Optional[str] = os.getenv("SLACK_WEBHOOK_URL")
+    SLACK_BOT_TOKEN: Optional[str] = os.getenv("SLACK_BOT_TOKEN")
+    SLACK_ALERT_CHANNEL: Optional[str] = os.getenv("SLACK_ALERT_CHANNEL")
+    SMTP_SERVER: Optional[str] = os.getenv("SMTP_SERVER")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USERNAME: Optional[str] = os.getenv("SMTP_USERNAME")
+    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD")
+    EMAIL_FROM: Optional[str] = os.getenv("EMAIL_FROM")
+    EMAIL_FROM_NAME: Optional[str] = os.getenv("EMAIL_FROM_NAME")
     
     # Audit Log Settings
     AUDIT_LOG_RETENTION_DAYS: int = int(os.getenv("AUDIT_LOG_RETENTION_DAYS", "90"))

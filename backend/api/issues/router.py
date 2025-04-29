@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from fastapi import status
 
 from api.database.database import get_db
 from api.models.database import Issue, User
@@ -42,14 +43,14 @@ async def get_issues(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get a list of issues with filtering and pagination."""
-    query = db.query(Issue)
+    """Get a list of issues with filtering and pagination.
+    By default, only shows issues for the current user.
+    """
+    query = db.query(Issue).filter(Issue.user_id == current_user.id)
     
     # Apply filters
     if filter.trace_id:
         query = query.filter(Issue.trace_id == filter.trace_id)
-    if filter.user_id:
-        query = query.filter(Issue.user_id == filter.user_id)
     if filter.status:
         query = query.filter(Issue.status == filter.status)
     if filter.severity:
@@ -82,7 +83,10 @@ async def get_issue(
     current_user: User = Depends(get_current_user)
 ):
     """Get a specific issue by ID."""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = db.query(Issue).filter(
+        Issue.id == issue_id,
+        Issue.user_id == current_user.id
+    ).first()
     if not issue:
         raise HTTPException(status_code=404, detail="Issue not found")
     return IssueResponse.from_orm(issue)
@@ -95,7 +99,10 @@ async def update_issue(
     current_user: User = Depends(get_current_user)
 ):
     """Update an issue."""
-    db_issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    db_issue = db.query(Issue).filter(
+        Issue.id == issue_id,
+        Issue.user_id == current_user.id
+    ).first()
     if not db_issue:
         raise HTTPException(status_code=404, detail="Issue not found")
     
@@ -118,7 +125,10 @@ async def delete_issue(
     current_user: User = Depends(get_current_user)
 ):
     """Delete an issue."""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = db.query(Issue).filter(
+        Issue.id == issue_id,
+        Issue.user_id == current_user.id
+    ).first()
     if not issue:
         raise HTTPException(status_code=404, detail="Issue not found")
     

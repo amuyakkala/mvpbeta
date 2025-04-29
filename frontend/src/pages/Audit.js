@@ -17,7 +17,22 @@ import {
   Select,
   CircularProgress,
   Alert,
+  Card,
+  CardContent,
+  Grid,
+  IconButton,
+  Collapse,
+  Tooltip,
+  Divider,
 } from '@mui/material';
+import {
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  Info as InfoIcon,
+  Error as ErrorIcon,
+  Warning as WarningIcon,
+  CheckCircle as CheckCircleIcon,
+} from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
@@ -25,6 +40,7 @@ export default function Audit() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [expandedRows, setExpandedRows] = useState({});
   const [filters, setFilters] = useState({
     actionType: '',
     resourceType: '',
@@ -91,10 +107,25 @@ export default function Audit() {
     }
   };
 
+  const getActionIcon = (action) => {
+    switch (action?.toLowerCase()) {
+      case 'create':
+        return <CheckCircleIcon color="success" />;
+      case 'update':
+        return <InfoIcon color="info" />;
+      case 'delete':
+        return <ErrorIcon color="error" />;
+      case 'login':
+        return <CheckCircleIcon color="primary" />;
+      case 'logout':
+        return <InfoIcon color="secondary" />;
+      default:
+        return <InfoIcon />;
+    }
+  };
+
   const getActionColor = (action) => {
-    if (!action || typeof action !== 'string') return 'default';
-    
-    switch (action.toLowerCase()) {
+    switch (action?.toLowerCase()) {
       case 'create':
         return 'success';
       case 'update':
@@ -118,152 +149,198 @@ export default function Audit() {
     }));
   };
 
-  const formatMetaData = (metaData) => {
-    if (!metaData) return '-';
-    try {
-      // If metaData is already a string, parse it first
-      const data = typeof metaData === 'string' ? JSON.parse(metaData) : metaData;
-      
-      // Check if it's an error object
-      if (data && typeof data === 'object') {
-        if ('type' in data || 'msg' in data || 'loc' in data || 'input' in data || 'url' in data) {
-          // If it's an error object, return a formatted string
-          return `Error: ${data.msg || data.type || 'Unknown error'}`;
-        }
-        // If it's a regular object, stringify it
-        return JSON.stringify(data, null, 2);
-      }
-      return String(data);
-    } catch (e) {
-      console.error('Error formatting meta data:', e);
-      return '-';
-    }
+  const handleRowExpand = (id) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
+  const formatMetaData = (metaData) => {
+    if (!metaData) return null;
     try {
-      return new Date(dateString).toLocaleString();
+      const data = typeof metaData === 'string' ? JSON.parse(metaData) : metaData;
+      return (
+        <Box sx={{ mt: 1 }}>
+          {Object.entries(data).map(([key, value]) => (
+            <Box key={key} sx={{ mb: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                {key}:
+              </Typography>
+              <Typography variant="body2">
+                {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      );
     } catch (e) {
-      console.error('Error formatting date:', e);
-      return '-';
+      console.error('Error formatting meta data:', e);
+      return null;
     }
   };
 
   return (
-    <Box>
+    <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
         Audit Logs
       </Typography>
 
-      <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Action Type</InputLabel>
-          <Select
-            name="actionType"
-            value={filters.actionType}
-            onChange={handleFilterChange}
-            label="Action Type"
-          >
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="create">Create</MenuItem>
-            <MenuItem value="update">Update</MenuItem>
-            <MenuItem value="delete">Delete</MenuItem>
-            <MenuItem value="login">Login</MenuItem>
-            <MenuItem value="logout">Logout</MenuItem>
-          </Select>
-        </FormControl>
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Action Type</InputLabel>
+                <Select
+                  name="actionType"
+                  value={filters.actionType}
+                  onChange={handleFilterChange}
+                  label="Action Type"
+                >
+                  <MenuItem value="">All</MenuItem>
+                  <MenuItem value="create">Create</MenuItem>
+                  <MenuItem value="update">Update</MenuItem>
+                  <MenuItem value="delete">Delete</MenuItem>
+                  <MenuItem value="login">Login</MenuItem>
+                  <MenuItem value="logout">Logout</MenuItem>
+                  <MenuItem value="trace_analysis_start">Trace Analysis Start</MenuItem>
+                  <MenuItem value="issue_detected">Issue Detected</MenuItem>
+                  <MenuItem value="performance_issue_detected">Performance Issue</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
 
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Resource Type</InputLabel>
-          <Select
-            name="resourceType"
-            value={filters.resourceType}
-            onChange={handleFilterChange}
-            label="Resource Type"
-          >
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="trace">Trace</MenuItem>
-            <MenuItem value="issue">Issue</MenuItem>
-            <MenuItem value="user">User</MenuItem>
-          </Select>
-        </FormControl>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Resource Type</InputLabel>
+                <Select
+                  name="resourceType"
+                  value={filters.resourceType}
+                  onChange={handleFilterChange}
+                  label="Resource Type"
+                >
+                  <MenuItem value="">All</MenuItem>
+                  <MenuItem value="trace">Trace</MenuItem>
+                  <MenuItem value="issue">Issue</MenuItem>
+                  <MenuItem value="user">User</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
 
-        <TextField
-          name="startDate"
-          label="Start Date"
-          type="date"
-          value={filters.startDate}
-          onChange={handleFilterChange}
-          InputLabelProps={{ shrink: true }}
-        />
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                name="startDate"
+                label="Start Date"
+                type="date"
+                value={filters.startDate}
+                onChange={handleFilterChange}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
 
-        <TextField
-          name="endDate"
-          label="End Date"
-          type="date"
-          value={filters.endDate}
-          onChange={handleFilterChange}
-          InputLabelProps={{ shrink: true }}
-        />
-      </Box>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                name="endDate"
+                label="End Date"
+                type="date"
+                value={filters.endDate}
+                onChange={handleFilterChange}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Action</TableCell>
+                <TableCell>Resource</TableCell>
+                <TableCell>User</TableCell>
+                <TableCell>Timestamp</TableCell>
+                <TableCell>Details</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {auditLogs.map((log) => (
+                <React.Fragment key={log.id}>
+                  <TableRow hover>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {getActionIcon(log.action_type)}
+                        <Chip
+                          label={log.action_type}
+                          color={getActionColor(log.action_type)}
+                          size="small"
+                        />
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip
+                          label={log.resource_type}
+                          variant="outlined"
+                          size="small"
+                        />
+                        {log.resource_id && (
+                          <Typography variant="caption" color="text.secondary">
+                            ID: {log.resource_id}
+                          </Typography>
+                        )}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {log.user?.email || 'System'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {new Date(log.created_at).toLocaleString()}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRowExpand(log.id)}
+                      >
+                        {expandedRows[log.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
+                      <Collapse in={expandedRows[log.id]} timeout="auto" unmountOnExit>
+                        <Box sx={{ margin: 2 }}>
+                          <Typography variant="h6" gutterBottom>
+                            Metadata
+                          </Typography>
+                          <Divider sx={{ mb: 2 }} />
+                          {formatMetaData(log.meta_data)}
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </React.Fragment>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Timestamp</TableCell>
-              <TableCell>User</TableCell>
-              <TableCell>Action</TableCell>
-              <TableCell>Resource</TableCell>
-              <TableCell>Details</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  <CircularProgress />
-                </TableCell>
-              </TableRow>
-            ) : auditLogs.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No audit logs found
-                </TableCell>
-              </TableRow>
-            ) : (
-              auditLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>{formatDate(log.created_at)}</TableCell>
-                  <TableCell>{log.user_id || '-'}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={log.action_type || '-'}
-                      color={getActionColor(log.action_type)}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {log.resource_type || '-'} {log.resource_id ? `#${log.resource_id}` : ''}
-                  </TableCell>
-                  <TableCell>
-                    <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                      {formatMetaData(log.meta_data)}
-                    </pre>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
     </Box>
   );
 } 
