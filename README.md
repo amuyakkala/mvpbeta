@@ -12,6 +12,96 @@ A fully working MVP that lets users upload traces/logs, automatically run Root C
 - Audit logging
 - Health monitoring
 
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+- Docker and Docker Compose
+- Git
+- Python 3.8+ (for local development)
+- Node.js 14+ (for local development)
+
+## Quick Start with Docker (Recommended)
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/amuyakkala/mvpbeta.git
+   cd mvpbeta
+   ```
+
+2. Create necessary directories:
+   ```bash
+   mkdir -p data
+   ```
+
+3. Start the application using Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. Access the application:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
+
+## Local Development Setup
+
+### Backend Setup
+
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+5. Run the backend server:
+   ```bash
+   python run.py
+   ```
+
+### Frontend Setup
+
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. Start the development server:
+   ```bash
+   npm start
+   ```
+
+## Default Credentials
+
+- Email: admin@test.com
+- Password: password123
+
 ## System Architecture
 
 ```
@@ -26,43 +116,6 @@ A fully working MVP that lets users upload traces/logs, automatically run Root C
 - **Authentication**: JWT-based
 - **Notification System**: Real-time notifications with database persistence
 - **Audit Logging**: Comprehensive action tracking
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.8+
-- Node.js 14+
-- Docker and Docker Compose (optional)
-
-### Local Development
-
-1. Clone the repository
-2. Set up the backend:
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   cp .env.example .env
-   # Edit .env with your configuration
-   python run.py
-   ```
-
-3. Set up the frontend:
-   ```bash
-   cd frontend
-   npm install
-   cp .env.example .env
-   # Edit .env with your configuration
-   npm start
-   ```
-
-### Docker Deployment
-
-```bash
-docker-compose up -d
-```
 
 ## API Documentation
 
@@ -122,11 +175,6 @@ npm test
    - Check database connection
    - Verify notification settings in .env
    - Monitor health check endpoint
-
-### Dummy Credentials
-
-- Email: admin@test.com
-- Password: password123
 
 ## Contributing
 
