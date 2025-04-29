@@ -1,6 +1,3 @@
-# EchosysAI MVP
-
-A fully working MVP that lets users upload traces/logs, automatically run Root Cause Analysis (RCA), create and manage incidents/issues, and maintain an audit trail.
 
 ## Features
 
